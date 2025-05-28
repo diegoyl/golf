@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>tjs test</title>
+    <style>
+      body { margin: 0; overflow: hidden; }
+      canvas { display: block; }
+    </style>
+
+    <script type="module" crossorigin src="/golf/assets/index-BpenvPsc.js"></script>
+    <link rel="stylesheet" crossorigin href="/golf/assets/index-CRRGKSx_.css">
+  </head>
+  <body>
+    <!-- <script type="module" src="/src/generateShadowMap.js"></script> -->
+    <div id="presetMenu">
+      <button onclick="setCameraView('isoTee')">Iso Tee</button>
+      <button onclick="setCameraView('tee1')">Tee 1</button>
+      <button onclick="setCameraView('teeSide')">Tee Side</button>
+      <!-- <button onclick="setCameraView('tee3')">Tee 3</button>
+      <button onclick="setCameraView('tee4')">Tee 4</button>
+      <button onclick="setCameraView('tee5')">Tee 5</button> -->
+
+      <button onclick="setCameraView('puttFr')">Putt Fr</button>
+      <button onclick="setCameraView('puttBk')">Putt Bk</button>
+      <button onclick="setCameraView('puttL')">Putt L</button>
+      <button onclick="setCameraView('puttR')">Putt R</button>
+    </div>
+
+    <!-- <div id="customViewMenu">
+      <div>
+        <p>Cam</p>
+        <label>X <input type="number" id="camX"></label>
+        <label>Z <input type="number" id="camZ"></label>
+      </div>
+
+      <div>
+        <p>Target</p>
+        <label>X <input type="number" id="lookX"></label>
+        <label>Z <input type="number" id="lookZ"></label>
+      </div>
+
+      <div>
+        <p>Shift</p>
+        <label>X <input type="number" id="shiftX"></label>
+        <label>Z <input type="number" id="shiftZ"></label>
+        <label>Y^ <input type="number" id="shiftY"></label>
+      </div>
+
+      <div>
+        <button id="applyCamera">Set View</button>
+      </div>
+    
+    </div> -->
+    
+    <div id="putt-controls">
+
+      <label>
+        FOV:
+        <input type="number" id="fov" value="50" step="1">
+      </label>
+      <label>
+        POWER:
+        <input style="width:70%" type="range" id="swingPower" value="1.0" max="1" min="0.0" step="0.1">
+      </label>
+      <label>
+        SPIN:
+        <input style="width:70%" type="range" id="swingSpin" value="0.0" max="1" min="0.0" step="0.1">
+      </label>
+      <label>
+        Aim Angle (°):
+        <button id="aimL">Left</button>
+        <button id="aimR">Right</button>
+      </label>
+      <div>
+        <button style="width:48%; display:inline-block" id="strikeButton">SWING</button>
+        <button style="width:48%; display:inline-block" id="teeBallButton">Tee Ball</button>
+      </div>
+      <button id="resetBallButton">Reset Ball</button>
+
+
+      <br>
+      <label class="hide">
+        FW BncDec:
+        <input type="number" id="fwb" value="0.22" step=".01">
+      </label>
+      <label class="hide">
+        gndCntFrm:
+        <input type="number" id="xzb" value="1" step=".01">
+      </label>
+      
+      <br>
+      
+      <label>
+        Putt Angle (°):
+        <input type="number" id="puttAngle" value="0" step=".2">
+      </label>
+      <label>
+        Putt Power:
+        <input type="number" id="puttPower" value="2" step=".01">
+      </label>
+      <button id="puttButton">Putt</button>
+
+      <br>
+
+      <label>
+        X Position:
+        <input type="number" id="posX" value="-706.5" step=".1">
+      </label>
+      <label>
+        Z Position:
+        <input type="number" id="posZ" value="66" step=".1">
+      </label>
+    </div>
+
+    <div id="clubSelectDiv">
+      <label for="clubSelect">Club:</label>
+      <select id="clubSelect">
+        <option value=""></option>
+        <option value="driver">Driver</option>
+        <option value="wood">3 Wood</option>
+        <option value="3i">3 Iron</option>
+        <option value="5i">5 Iron</option>
+        <option value="7i">7 Iron</option>
+        <option value="9i">9 Iron</option>
+        <option value="gap">Gap Wedge</option>
+        <option value="lob">Lob Wedge</option>
+        <option value="putter">Putter</option>
+      </select>
+
+    </div>
+
+    <div id="gameMenuFr">
+      <button id="restartGame">RESTART</button>
+
+    </div>
+    <div id="gameMenu">
+      <button id="startGame">START</button>
+
+    </div>
+
+  </body>
+</html>
