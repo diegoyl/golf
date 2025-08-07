@@ -73,9 +73,12 @@
         <button id="aimL">Left</button>
         <button id="aimR">Right</button>
       </label>
+      
       <div>
         <button style="width:48%; display:inline-block" id="strikeButton">SWING</button>
+        <button class="hide" style="width:48%; display:inline-block" id="teeBallButton">Tee Ball</button>
       </div>
+      <button class="hide" id="resetBallButton">Reset Ball</button>
 
 
       <br>
@@ -86,6 +89,29 @@
       <label class="hide">
         gndCntFrm:
         <input type="number" id="xzb" value="1" step=".01">
+      </label>
+
+      <br>
+      
+      <label class="hide" >
+        Putt Angle (°):
+        <input type="number" id="puttAngle" value="0" step=".2">
+      </label>
+      <label class="hide" >
+        Putt Power:
+        <input type="number" id="puttPower" value="2" step=".01">
+      </label>
+      <button class="hide"  id="puttButton">Putt</button>
+
+      <br>
+
+      <label class="hide" >
+        X Position:
+        <input type="number" id="posX" value="-706.5" step=".1">
+      </label>
+      <label class="hide" >
+        Z Position:
+        <input type="number" id="posZ" value="66" step=".1">
       </label>
       
     </div>
@@ -152,6 +178,7 @@
 
   </body>
 </html>
+
 
 
 
