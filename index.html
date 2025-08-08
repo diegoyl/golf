@@ -54,29 +54,27 @@
     
     </div> -->
     
-    <div id="putt-controls">
+    <div id="putt-controls" style="font-weight:bold;">
 
       <label>
-        FOV:
+        ZOOM:
         <input type="number" id="fov" value="50" step="1">
       </label>
-      <br>
       <label>
-        PWR:
-        <input style="width:70%" type="range" id="swingPower" value="1.0" max="1" min="0.0" step="0.02">
+        PWR
+        <input style="width:70%" type="range" id="swingPower" value="1.0" max="1" min="0.04" step="0.02">
       </label>
       <label>
-        SPIN:
+        SPIN
         <input style="width:70%" type="range" id="swingSpin" value="0.5" max="1" min="0.0" step="0.02">
       </label>
       <label>
-        Aim Angle (°):
+        AIM
         <button id="aimL">←</button>
         <button id="aimR">→</button>
       </label>
-      <br>
       <div>
-        <button style="width:48%; display:inline-block" id="strikeButton">SWING</button>
+        <button style="font-size:1.2em; width:100%; display:inline-block; padding:14px 10px; margin-top:12px" id="strikeButton">SWING</button>
         <button class="hide" style="width:48%; display:inline-block" id="teeBallButton">Tee Ball</button>
       </div>
       <button class="hide" id="resetBallButton">Reset Ball</button>
@@ -176,6 +174,7 @@
 
   </body>
 </html>
+
 
 
 
