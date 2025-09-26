@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wiimote Debug Page</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    .section-title {
+      margin-top: 20px;
+    }
+    .bar-container {
+      position: relative;
+      width: 300px;
+      height: 20px;
+      background: #ddd;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-center {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      transition: width 0.1s linear;
+      transform-origin: left center;
+    }
+    .label {
+      margin-bottom: 2px;
+    }
+    .value-text {
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #333;
+    }
+    .button-container {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .button-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 12px;
+    }
+    .button {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: gray;
+      border: 1px solid #999;
+      transition: background 0.2s;
+    }
+  </style>
+</head>
+<body>
+  <h1>Wiimote Debug Page</h1>
+
+  <div class="section-title"><strong>Acceleration</strong></div>
+  <div class="label">Accel X</div>
+  <div class="bar-container"><div id="barX" class="bar-center" style="background: red;"></div></div>
+
+  <div class="label">Accel Y</div>
+  <div class="bar-container"><div id="barY" class="bar-center" style="background: green;"></div></div>
+
+  <div class="label">Accel Z</div>
+  <div class="bar-container"><div id="barZ" class="bar-center" style="background: blue;"></div></div>
+
+  <div class="section-title"><strong>Rotation</strong></div>
+  <br>
+
+  <div id="yawText" class="value-text">Yaw: 0</div>
+  <div class="bar-container"><div id="barYaw" class="bar-center" style="background: purple;"></div></div>
+  
+  <div id="pitchText" class="value-text">Pitch: 0</div>
+  <div class="bar-container"><div id="barPitch" class="bar-center" style="background: orange;"></div></div>
+  
+  <div id="rollText" class="value-text">Roll: 0</div>
+  <div class="bar-container"><div id="barRoll" class="bar-center" style="background: teal;"></div></div>
+  
+  <div class="section-title">Buttons</div>
+  <div class="button-container" id="buttons"></div>
+
+  <script>
+    const ws = new WebSocket('ws://localhost:8081');
+
+    const barX = document.getElementById('barX');
+    const barY = document.getElementById('barY');
+    const barZ = document.getElementById('barZ');
+
+    const barYaw = document.getElementById('barYaw');
+    const barPitch = document.getElementById('barPitch');
+    const barRoll = document.getElementById('barRoll');
+
+    const yawText = document.getElementById('yawText');
+    const pitchText = document.getElementById('pitchText');
+    const rollText = document.getElementById('rollText');
+
+    const buttonContainer = document.getElementById('buttons');
+
+    const buttonNames = ["A", "B", "DPadUp", "DPadDown", "DPadLeft", "DPadRight", "One", "Two", "Minus", "Plus", "Home"];
+    const buttonElems = {};
+
+    buttonNames.forEach(name => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'button-wrapper';
+
+      const btn = document.createElement('div');
+      btn.className = 'button';
+      wrapper.appendChild(btn);
+
+      const label = document.createElement('div');
+      label.textContent = name;
+      wrapper.appendChild(label);
+
+      buttonContainer.appendChild(wrapper);
+      buttonElems[name] = btn;
+    });
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      const accel = data.accel || { x: 0, y: 0, z: 0 };
+      const gyro = data.gyro || { yaw: 0, pitch: 0, roll: 0 };
+
+      const mapCenter = (v, maxAbs = 3) => {
+        const clamped = Math.max(-maxAbs, Math.min(maxAbs, v));
+        return (Math.abs(clamped) / maxAbs) * 50;
+      };
+
+      const setCenteredBar = (elem, val, maxAbs = 3) => {
+        const width = mapCenter(val, maxAbs);
+        elem.style.width = width + "%";
+        elem.style.transform = val >= 0 ? 'translateX(0)' : 'translateX(-100%)';
+      };
+
+      // --- Accel ---
+      setCenteredBar(barX, accel.x, 10);
+      setCenteredBar(barY, accel.y, 10);
+      setCenteredBar(barZ, accel.z, 10);
+
+      // --- Gyro ---
+      setCenteredBar(barYaw, gyro.yaw, 500);
+      setCenteredBar(barPitch, gyro.pitch, 500);
+      setCenteredBar(barRoll, gyro.roll, 500);
+
+      yawText.textContent = `Yaw: ${gyro.yaw.toFixed(2)}`;
+      pitchText.textContent = `Pitch: ${gyro.pitch.toFixed(2)}`;
+      rollText.textContent = `Roll: ${gyro.roll.toFixed(2)}`;
+
+      const btnData = data.buttons || {};
+      buttonNames.forEach(name => {
+        if (btnData[name]) {
+          buttonElems[name].style.background = 'cyan';
+        } else {
+          buttonElems[name].style.background = 'gray';
+        }
+      });
+    };
+
+    ws.onopen = () => {
+      console.log("✅ WebSocket connected");
+    };
+  </script>
+</body>
+</html>

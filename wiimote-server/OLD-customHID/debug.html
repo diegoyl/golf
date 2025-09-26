@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wiimote Debug</title>
+</head>
+<body>
+  <h1>Wiimote WebSocket Debug</h1>
+  <pre id="log"></pre>
+
+  <script>
+    const logEl = document.getElementById('log');
+    const ws = new WebSocket('ws://localhost:8081');
+
+    ws.onopen = () => {
+      logEl.textContent += '✅ Connected to Wii Remote server\n';
+      console.log('✅ Connected to Wii Remote server');
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      const text = JSON.stringify(data, null, 2);
+      logEl.textContent += text + '\n';
+      console.log('Data received:', data);
+    };
+
+    ws.onclose = () => {
+      logEl.textContent += '❌ Disconnected from Wii Remote server\n';
+      console.log('❌ Disconnected from Wii Remote server');
+    };
+
+    ws.onerror = (err) => {
+      logEl.textContent += '❌ WebSocket error\n';
+      console.error('WebSocket error:', err);
+    };
+  </script>
+</body>
+</html>

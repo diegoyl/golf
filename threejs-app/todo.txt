@@ -1,0 +1,41 @@
+magick z_hiBUMP16.png -depth 16 gray:z_RAWBUMP.raw
+magick putt_hiBUMP16.png -depth 16 gray:putt_RAWBUMP.raw
+
+// TODO /////////////////////////////////
+
+// BALL STRIKING:
+  // did we do spin rate, shouldnt it decay
+  // lessen bounce, Overdid it, now increase
+  // club selection menu?
+  // lie pre-shot effect
+  // bounce off of slope
+  // why does it not die in water
+
+  // club selection, only select putter if on green
+  // avatar gets flipped sometimes
+  // adjust club positioning/rot by club?
+  // push/pull mii before shot like in wii when you press A so ball isnt covered
+
+// TODO /////////////////////////////////
+
+
+
+- tidy up height data
+- 16bit using
+
+    > bugs:
+      - cutting hole is still slightly sliptical and doenst always liune up (maybe line up is right and ellipse is only issue)
+
+- trees/rocks
+- check swinging still works
+- sequencing
+- keep score data
+
+- build blu9 (PB18) to confirm everything scales and par5 size is supported
+
+
+
+LATER
+- fix blender UV map (clamp to squares)
+- flesh out physics (sloped bounce/spin, putting, wind)
+- shorten club distances (data in iii js)

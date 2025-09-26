@@ -2,7 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>tjs test</title>
+    <title>Golf!</title>
+    <link rel="icon" href="./public/favicon.ico" type="image/x-icon">
+
     <style>
       body { margin: 0; overflow: hidden; }
       canvas { display: block; }
@@ -10,20 +12,32 @@
 
   </head>
   <body>
-    <script type="module" src="/src/mainBlender.js"></script>
+    <script type="module" src="/src/moduleMain.js"></script>
+    <!-- <script type="module" src="/src/mainBlender.js"></script> -->
     <!-- <script type="module" src="/src/generateShadowMap.js"></script> -->
-    <div id="presetMenu">
-      <button onclick="setCameraView('isoTee')">Iso Tee</button>
+    <div id="presetMenu" style="top:3em">
+      <!-- <button onclick="setCameraView('isoTee')">Iso Tee</button>
       <button onclick="setCameraView('tee1')">Tee 1</button>
-      <button onclick="setCameraView('teeSide')">Tee Side</button>
+      <button onclick="setCameraView('teeSide')">Tee Side</button> -->
       <!-- <button onclick="setCameraView('tee3')">Tee 3</button>
       <button onclick="setCameraView('tee4')">Tee 4</button>
       <button onclick="setCameraView('tee5')">Tee 5</button> -->
 
-      <button onclick="setCameraView('puttFr')">Putt Fr</button>
+      <!-- <button onclick="setCameraView('puttFr')">Putt Fr</button>
       <button onclick="setCameraView('puttBk')">Putt Bk</button>
       <button onclick="setCameraView('puttL')">Putt L</button>
-      <button onclick="setCameraView('puttR')">Putt R</button>
+      <button onclick="setCameraView('puttR')">Putt R</button> -->
+      <button onclick="goToHole('blu1')">BLU 1</button>
+      <button onclick="goToHole('blu2')">BLU 2</button>
+      <button onclick="goToHole('blu9')">BLU 9</button>
+      <button onclick="goToHole('putt')">PUTT</button>
+      <button onclick="goToHole('drive')">DRIVE</button>
+      <br>
+      <br>
+      <br>
+      <input type="number" id="changeTeeIdx" value="1" max="20" min="1">
+      <button id="changeTee">Set Tee</button>
+      <!-- <button id="reTee">ReTee</button> -->
     </div>
 
     <!-- <div id="customViewMenu">
@@ -52,30 +66,69 @@
     
     </div> -->
     
+    <div id="gameMenu">
+      <button id="startGame">Start</button>
+      <p id="info">
+        This is a golf game I am making so I can learn threeJS. Currently working on making the physics a bit more accurate, cleaning up camera movement, adding a real UI, and creating more holes (and optimizing them so they load faster) 
+        <br><br>
+        It's only like 30% done, but you can already start playing around with some stuff. If something breaks, try clicking "Restart" button in bot-left corner or just relaod page 
+        <br>
+        <br>
+        Current Controls:
+        <br>
+        - Left/Right Arrows: Change aim
+        <br>
+        - Space Arrows: Hit ball
+        <br>
+        <br>
+        Club Selection (top row of keyboard):
+         <br>
+        - 1: Driver <br>
+        - 2: Wood <br>
+        - 3,5,7,9: Irons <br>
+        - 0: Putter <br>
+        - "-": 56 Wedge <br>
+        - "=": Lob Wedge <br>
+      </p>
+    </div>
+
+
     <div id="putt-controls">
 
       <label>
-        FOV:
-        <input type="number" id="fov" value="50" step="1">
+        FOV:<br>
+        <input type="number" id="fov" value="30" step="1">
+        <br>
+        cDist:<br>
+        <input type="number" id="camDist" value="40" step="1">
+        <br>
+        cHt:<br>
+        <input type="number" id="camHt" value="12" step=".2">
+        <br>
+        lookHt:<br>
+        <input type="number" id="lookHt" value="-50" step="1">
+        <br>
       </label>
+
+
       <label>
-        POWER:
-        <input style="width:70%" type="range" id="swingPower" value="1.0" max="1" min="0.0" step="0.1">
+        PWR:
+        <input style="width:70%" type="range" id="swingPower" value="1.0" max="1" min="0.01" step="0.01">
       </label>
       <label>
         SPIN:
         <input style="width:70%" type="range" id="swingSpin" value="0.0" max="1" min="0.0" step="0.1">
       </label>
-      <label>
+      <!-- <label>
         Aim Angle (°):
         <button id="aimL">Left</button>
         <button id="aimR">Right</button>
-      </label>
-      <div>
+      </label> -->
+      <!-- <div>
         <button style="width:48%; display:inline-block" id="strikeButton">SWING</button>
         <button style="width:48%; display:inline-block" id="teeBallButton">Tee Ball</button>
       </div>
-      <button id="resetBallButton">Reset Ball</button>
+      <button id="resetBallButton">Reset Ball</button> -->
 
 
       <br>
@@ -88,9 +141,8 @@
         <input type="number" id="xzb" value="1" step=".01">
       </label>
       
-      <br>
       
-      <label>
+      <!-- <label>
         Putt Angle (°):
         <input type="number" id="puttAngle" value="0" step=".2">
       </label>
@@ -98,18 +150,17 @@
         Putt Power:
         <input type="number" id="puttPower" value="2" step=".01">
       </label>
-      <button id="puttButton">Putt</button>
+      <button id="puttButton">Putt</button> -->
 
-      <br>
 
-      <label>
+      <!-- <label>
         X Position:
         <input type="number" id="posX" value="-706.5" step=".1">
       </label>
       <label>
         Z Position:
         <input type="number" id="posZ" value="66" step=".1">
-      </label>
+      </label> -->
     </div>
 
     <div id="clubSelectDiv">
@@ -131,12 +182,25 @@
 
     <div id="gameMenuFr">
       <button id="restartGame">RESTART</button>
-
     </div>
-    <div id="gameMenu">
-      <button id="startGame">START</button>
 
+    
+  <!-- Column 4: Swing Power -->
+  <!-- <div id="power-container">
+    <div class="bar-container">
+        <div id="swingPowerBar" class="bar-fill"></div>
+        <div class="dot-container" style="bottom: calc(25% - 2%);">
+          <div class="dot"></div>
+        </div>
+        <div class="dot-container" style="bottom: calc(50% - 2%);">
+          <div class="dot"></div>
+        </div>
+        <div class="dot-container" style="bottom: calc(75% - 2%);">
+          <div class="dot"></div>
+        </div>
     </div>
+  </div> -->
 
   </body>
 </html>
+

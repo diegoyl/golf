@@ -1,0 +1,16 @@
+{
+  "name": "wiimote-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "node-hid": "^3.2.0",
+    "ws": "^8.18.3"
+  }
+}

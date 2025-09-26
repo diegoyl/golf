@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wiimote Debug Page</title>
+  <link rel="icon" href="favicon.png" type="image/png">
+
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      gap: 20px;
+      background-color: rgb(30, 32, 32);
+    }
+    .column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: rgb(249, 248, 245);
+    }
+    .button-layout {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: white;
+      padding: 50px 10px;
+      border-radius: 20px;
+      outline: #dadada 5px solid;
+    }
+    .dpad {
+      display: grid;
+      grid-template-columns: 25px 25px 25px;
+      grid-template-rows: 25px 25px 25px;
+      gap: 2px;
+      margin-bottom: 25px;
+    }
+    .button {
+      border-radius: 50%;
+      background: #dadada;
+      border: 3px solid #dadada;
+      transition: background 0.1s;
+    }
+    .rectbutton { border-radius: 20%; }
+    .dpadsize { width: 25px; height: 25px; }
+    .bar-container-vertical {
+      position: relative;
+      width: 35px;
+      height: 400px;
+      background: #ddd;
+      margin-bottom: .5em;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .barsC {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 2.2em;
+      text-align: center;
+    }
+    .bar-center-vertical {
+        position: absolute;
+        bottom: 50%;
+        height: 50%;
+        width: 100%;
+        transform-origin: bottom center;
+        transition: transform 0.05s linear;
+    }
+    .power-bar {
+      position: relative;
+      width:80px;
+      height: 500px;
+      margin: 1em 0;
+      border-radius: 10px;
+      outline: gray solid 8px;
+      overflow: hidden;
+    }
+    .power-bar-fill {
+        position: absolute;
+        bottom: 0%;
+        height: 33%;
+        width: 100%;
+        transform-origin: center bottom;
+        transition: transform 0.05s linear;
+    }
+    .bar-marker {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 2%;
+        background: gray ;
+        opacity: 0.5;
+        mix-blend-mode: multiply;
+    }
+    .accel-label{
+        font-family: monospace;
+        width: 3em;
+        text-align: right;
+        font-size: 1em;
+        /* background-color: red; */
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>"
+  <!-- Column 1: Buttons -->
+  <div class="column">
+    <h2>Buttons</h2>
+    <div class="button-layout">
+      <div class="dpad">
+        <div></div>
+        <div id="DPadUp" class="button rectbutton dpadsize"></div>
+        <div></div>
+        <div id="DPadLeft" class="button rectbutton dpadsize"></div>
+        <div></div>
+        <div id="DPadRight" class="button rectbutton dpadsize"></div>
+        <div></div>
+        <div id="DPadDown" class="button rectbutton dpadsize"></div>
+        <div></div>
+      </div>
+      <div id="A" class="button" style="width:45px; height:45px; margin-bottom: 15px;"></div>
+      <div id="B" class="button" style="border-radius:6px; width:40px; height:60px; margin-bottom: 40px;"></div>
+      <div style="display:flex; flex-direction:row;">
+        <div id="Minus" class="button" style="width:20px; height:20px; margin: 10px 10px;"></div>
+        <div id="Home" class="button" style="width:20px; height:20px; margin: 10px 10px;"></div>
+        <div id="Plus" class="button" style="width:20px; height:20px; margin: 10px 10px;"></div>
+      </div>     
+      <div id="One" class="button" style="width:32px; height:32px; margin-top: 50px;"></div>
+      <div id="Two" class="button" style="width:32px; height:32px; margin-top: 18px;" ></div>
+    </div>
+  </div>
+
+  <!-- Column 2: Accel -->
+  <div class="column">
+    <h2>Acceleration</h2>
+    <div class="barsC">
+        <div>
+            <div class="bar-container-vertical"><div id="barX" class="bar-center-vertical" style="background: red;"></div></div>
+            <div>X</div>
+            <div id="labelX" class="accel-label"></div>
+        </div>
+        <div>
+            <div class="bar-container-vertical"><div id="barY" class="bar-center-vertical" style="background: green;"></div></div>
+            <div>Y</div>
+            <div id="labelY" class="accel-label"></div>
+        </div>
+        <div>
+            <div class="bar-container-vertical"><div id="barZ" class="bar-center-vertical" style="background: blue;"></div></div>
+            <div>Z</div>
+            <div id="labelZ" class="accel-label"></div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Column 3: Gyro + 3D -->
+  <div class="column">
+    <h2>Rotation</h2>
+    <div class="barsC">
+        <div>
+            <div class="bar-container-vertical"><div id="barYaw" class="bar-center-vertical" style="background: red;"></div></div>
+            <div>Yaw</div>
+        </div>
+        <div>
+            <div class="bar-container-vertical"><div id="barPitch" class="bar-center-vertical" style="background: green;"></div></div>
+            <div>Pitch</div>
+        </div>
+        <div>
+            <div class="bar-container-vertical"><div id="barRoll" class="bar-center-vertical" style="background: blue;"></div></div>
+            <div>Roll</div>
+        </div>
+    </div>
+    <canvas id="threeCanvas" width="200" height="200"></canvas>
+  </div>
+
+  <!-- Column 4: Swing Power -->
+  <div class="column">
+    <h2>Swing Power</h2>
+    <div class="bar-container-vertical power-bar">
+        <div id="swingPowerBar" class="power-bar-fill"></div>
+        <div class="bar-marker" style="bottom: 24%;"></div>
+        <div class="bar-marker" style="bottom: 49%;"></div>
+        <div class="bar-marker" style="bottom: 74%;"></div>
+    </div>
+  </div>
+
+  <!-- Column 5: Arc Visualizer -->
+  <div class="column">
+    <h2>Arc Visualizer</h2>
+    <canvas id="arcCanvas" width="300" height="300"></canvas>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    const ws = new WebSocket('ws://localhost:8081');
+
+    const swingPowerBar = document.getElementById('swingPowerBar');
+
+    // Buttons
+    const buttonNames = ["A", "B", "DPadUp", "DPadDown", "DPadLeft", "DPadRight", "One", "Two", "Minus", "Plus", "Home"];
+    const buttonElems = {};
+    buttonNames.forEach(name => {
+      buttonElems[name] = document.getElementById(name);
+    });
+
+    // Three.js setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('threeCanvas'), alpha: true });
+    camera.position.z = 5;
+    const geometry = new THREE.BoxGeometry(1, 5, 0.8);
+    const material = new THREE.MeshNormalMaterial();
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+
+    let rotRoll = 0, rotYaw = 0, rotPitch = 0;
+    let arcAngle = Math.PI / 2;
+
+    const arcCanvas = document.getElementById("arcCanvas");
+    const arcCtx = arcCanvas.getContext("2d");
+    const centerX = arcCanvas.width / 2;
+    const centerY = arcCanvas.height / 2;
+    const radius = 100;
+
+    // Direction smoothing
+    const xHistorySize = 10;
+    let xSignHistory = new Array(xHistorySize).fill(-1);
+    let currentDir = -1; // Start backswing
+
+    function clamp(val, min, max) {
+      return Math.min(Math.max(val, min), max);
+    }
+
+    function drawArc(angle) {
+      arcCtx.clearRect(0, 0, arcCanvas.width, arcCanvas.height);
+      arcCtx.beginPath();
+      arcCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      arcCtx.strokeStyle = "#aaa";
+      arcCtx.lineWidth = 4;
+      arcCtx.stroke();
+
+      const dotX = centerX + radius * -Math.cos(angle);
+      const dotY = centerY + radius * Math.sin(angle);
+
+      arcCtx.beginPath();
+      arcCtx.arc(dotX, dotY, 10, 0, 2 * Math.PI);
+      arcCtx.fillStyle = "lime";
+      arcCtx.fill();
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+      drawArc(arcAngle);
+    }
+    animate();
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      const accel = data.accel || { x: 0, y: 0, z: 0 };
+      const gyro = data.gyro || { yaw: 0, pitch: 0, roll: 0 };
+      const buttons = data.buttons || {};
+
+      buttonNames.forEach(name => {
+        buttonElems[name].style.background = buttons[name] ? 'rgb(0, 148, 228)' : '#dadada';
+      });
+
+      if (buttons.B) {
+        rotRoll = rotYaw = rotPitch = 0;
+        arcAngle = Math.PI / 2;
+        currentDir = -1;
+      }
+
+      function setVerticalBar(elem, val, maxAbs = 3) {
+        const clamped = Math.max(-maxAbs, Math.min(maxAbs, val));
+        const scale = clamped / maxAbs;
+        elem.style.transform = `scaleY(${scale})`;
+      }
+      setVerticalBar(document.getElementById('barX'), accel.x, 12);
+      setVerticalBar(document.getElementById('barY'), accel.y, 25);
+      setVerticalBar(document.getElementById('barZ'), accel.z, 12);
+
+      document.getElementById('labelX').innerText = accel.x.toFixed(2);
+      document.getElementById('labelY').innerText = accel.y.toFixed(2);
+      document.getElementById('labelZ').innerText = accel.z.toFixed(2);
+
+      if (Math.abs(gyro.roll) > 50) rotRoll += gyro.roll * 0.016 * Math.PI / 180;
+      if (Math.abs(gyro.yaw) > 50) rotYaw += gyro.yaw * 0.016 * Math.PI / 180;
+      if (Math.abs(gyro.pitch) > 50) rotPitch += gyro.pitch * 0.016 * Math.PI / 180;
+
+      cube.rotation.x = -rotPitch;
+      cube.rotation.y = -rotRoll;
+      cube.rotation.z = rotYaw;
+
+      setVerticalBar(document.getElementById('barRoll'), rotRoll, Math.PI);
+      setVerticalBar(document.getElementById('barYaw'), rotYaw, Math.PI);
+      setVerticalBar(document.getElementById('barPitch'), rotPitch, Math.PI);
+
+
+
+      // CALCULATING SWING MECHANICS ///////
+      //////////////////////////////////////////
+
+      // y magnitude
+    //   const maxYspeed = 30;
+    //   const deadzone = .05;
+    //   let yMag = clamp(Math.abs(accel.y), 0, maxYspeed);
+    //   let yNorm = yMag / maxYspeed;
+    //   if (yNorm < deadzone) {
+    //     yNorm = 0;
+    //   }
+
+    // //   if (yMag > 5) {
+    // //     currentDir = accel.x < 0 ? -1 : 1;
+    // //   }
+
+    //   // Update x sign history
+    //   xSignHistory.push(Math.sign(accel.x) || 1);
+    //   if (xSignHistory.length > xHistorySize) xSignHistory.shift();
+
+    //   const yThreshold = 5;
+    //   // Only update direction if yNorm < threshold
+    //   if (yMag < yThreshold) {
+    //     let sum = xSignHistory.reduce((a, b) => a + b, 0);
+    //     let majority = sum >= 0 ? 1 : -1;
+    //     currentDir = majority;
+    //   }
+
+
+    //   let targetAngle;
+    //   if (currentDir < 0) {
+    //     targetAngle = Math.PI / 2 + yNorm * (Math.PI);
+    //   } else {
+    //     targetAngle = Math.PI / 2 - yNorm * (Math.PI);
+    //   }
+
+    //   // Smooth transition and avoid tiny changes
+    //   const trembleThreshold = 0.04
+    //   if (Math.abs(targetAngle - arcAngle) > trembleThreshold) {
+    //     arcAngle += (targetAngle - arcAngle) * 0.9;
+
+    //     // Update swing power bar
+    //     swingPowerBar.style.height = `${yNorm * 100}%`;
+    //     swingPowerBar.style.background = currentDir < 0 ? "green" : "blue";
+    //   }
+    
+    // const pitch = Math.atan2(Math.sqrt(accel.x * accel.x + accel.z * accel.z), -accel.y);
+    const pitch = Math.atan2(-accel.x, accel.y +10);
+
+    let rawPitch = pitch;
+
+    // Map from [-π, π] to [0, 2π]
+    if (rawPitch < 0) {
+      rawPitch += 2 * Math.PI;
+    }
+
+    // Directly use as arc angle
+    targetAngle = rawPitch + Math.PI/2;
+    arcAngle += (targetAngle - arcAngle) * 0.2;
+
+    };
+
+    ws.onopen = () => {
+      console.log("✅ WebSocket connected");
+    };
+  </script>
+</body>
+</html>

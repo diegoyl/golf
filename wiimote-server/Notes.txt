@@ -1,0 +1,15 @@
+RUNNING LOCALLY
+node server.js
+
+
+
+
+Toshiba Install Device Code
+USB\VID_8087&PID_0A2B
+
+
+
+Pairing Wiimote to Default Windows Bluetooth
+    * cant go through settings because no option for pairing w/out Pairing
+    1. Control Panel => Devices & Printers page => Add Device button
+    2. Select Nintendo RLV-CNT-01 => Click "Next" when asked for PIN

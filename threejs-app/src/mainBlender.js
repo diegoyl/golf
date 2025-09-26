@@ -36,6 +36,10 @@ let HOLE_MANAGER;
 let CAM_MANAGER;
 let UI_MANAGER;
 
+/// WIIMOTE GLOBALS
+let WIIMOTE_POWER = 0;
+let WIIMOTE_POWER_PREV = 0;
+
 // OPTIONS ///////////////////////////////
 let ball = false;
 let aimTools = false;
@@ -168,7 +172,7 @@ window.setCameraView = function(viewName) {
   lookZ = ( -view[3]/100 + .5) * OPT_SIZE -1
   
 
-  let camY = getHeightAt(camX,camZ) +24
+  let camY = getHeightAt(camX,camZ) + 24 //todo:chagne t
   let lookY = getHeightAt(lookX,lookZ)
 
   camera.position.set(camX, camY, camZ);
@@ -290,8 +294,6 @@ const raycaster = new THREE.Raycaster();
 const downVector = new THREE.Vector3(0, -1, 0);
 const rayOrigin = new THREE.Vector3();
 function getHeightAt(x, z) {
-  const size = OPT_SIZE;
-  const res = OPT_RES;
 
   rayOrigin.set(x,500, z); // start high above the terrain
   raycaster.set(rayOrigin, downVector);
@@ -334,7 +336,7 @@ surfaceMapImg.onload = () => {
   surfaceMapImgData = surfaceMapCtx.getImageData(0, 0, surfaceMapImg.width, surfaceMapImg.height).data;
   // Store surfaceMapImgData for sampling later
 };
-surfaceMapImg.src = `surface_maps/surface_map_${HOLE_NAME}.png`;
+surfaceMapImg.src = `./surface_maps/surface_map_${HOLE_NAME}.png`;
 
 function getSurfaceTypeAt(x, z) {
   const uvX = (x + OPT_SIZE / 2) / OPT_SIZE;
@@ -463,7 +465,7 @@ async function createSurfaceTexturesAsync() {
     uRepeat: { value: new THREE.Vector2(txtScaleMain, txtScaleMain) },
     uRepeat2: { value: new THREE.Vector2(txtScaleExtra1, txtScaleExtra1) },
     mainMixWt: { value: mainMixWt },  
-    uBakedShadowTex: { value: await loadTexture('/shadow_maps/baked_shad_'+HOLE_NAME+'.png') },
+    uBakedShadowTex: { value: await loadTexture('./shadow_maps/baked_shad_'+HOLE_NAME+'.png') },
     holeCenter: {value: new THREE.Vector2(
       (HOLE_LOC.x / 100),
       (HOLE_LOC.z / 100),
@@ -471,16 +473,13 @@ async function createSurfaceTexturesAsync() {
     holeRadius: {value: CUP_RADIUS/OPT_SIZE}
 };
   console.log("\t\t-- Done Loading Shadows!");
-
-
-
   console.log("\t2e. Loading Surface Textures...");
 
   const promises = [];
 
   for (const [maskName, channels] of Object.entries(surfaceAssignments)) {
     const maskUniformName = `u${maskName.charAt(0).toUpperCase() + maskName.slice(1)}`;
-    const maskURL = `/surface_masks/${maskName}_${HOLE_NAME}.png`;
+    const maskURL = `./surface_masks/${maskName}_${HOLE_NAME}.png`;
     promises.push(
       loadTexture(maskURL, false).then(tex => {
         uniforms[maskUniformName] = { value: tex };
@@ -489,7 +488,7 @@ async function createSurfaceTexturesAsync() {
 
     for (const [channel, surface] of Object.entries(channels)) {
       const texUniformName = `u${surface.charAt(0).toUpperCase() + surface.slice(1)}Tex`;
-      const texURL = `/textures/${surface}.jpg`;
+      const texURL = `./textures/${surface}.jpg`;
       promises.push(
         loadTexture(texURL).then(tex => {
           uniforms[texUniformName] = { value: tex };
@@ -718,7 +717,17 @@ function animate() {
   }
   CAM_MANAGER.update(); // animate camera movement
 
-  
+  if (clubMesh) {
+    if (WIIMOTE_POWER != WIIMOTE_POWER_PREV) {
+      const power_delta =  WIIMOTE_POWER_PREV - WIIMOTE_POWER
+      console.log()
+      const newAngle = power_delta * Math.PI
+      clubMesh.rotateX(newAngle)
+
+      WIIMOTE_POWER_PREV = WIIMOTE_POWER
+    }
+  }
+
   if (ball.inHole) {
     if (ball.position.y < holePosition.y - 1) {
       ball.velocity.set(0, 0, 0);
@@ -777,12 +786,12 @@ function createAvatar() {
   const loadClubModels = clubNames.map(name => {
     return new Promise((resolve, reject) => {
       loader.load(
-        `gltf/club_${name}.glb`,
+        `./GLTF/CLUBS/club_${name}.glb`,
         (gltf) => {
           const box = new Box3().setFromObject(gltf.scene);
           const size = new Vector3();
           box.getSize(size);
-          console.log('CLUB size:', size); // size.x, size.y, size.z
+          console.log('...LOADING CLUB: '+name); // size.x, size.y, size.z
 
           const maxDim = Math.max(size.x, size.y, size.z);
           const scale = 6.5 / maxDim;
@@ -803,27 +812,30 @@ function createAvatar() {
         }
       );
     });
+    console.log("ALL CLUB GLTFs loaded: ")
+    console.log(CLUB_PROFILES)
   });
 
   // Wait for all models to load
   Promise.all(loadClubModels).then(() => {
     // Now all models are loaded and stored
-    clubMesh = CLUB_PROFILES['driver']['model'].clone(); // start with a default
+    console.log("CLUB PROMISE RETURNED, setting to default driver")
+    // clubMesh = CLUB_PROFILES['driver']['model'].clone(); // start with a default
     
-    // CLUB POSITIONING
-    clubMesh.position.set(2.6,4.7,.9)
-    pants.add(clubMesh);
+    // // CLUB POSITIONING
+    // clubMesh.position.set(2.6,4.7,.9)
+    // pants.add(clubMesh);
     
     // You can now safely use `clubMesh`, switch clubs, etc.
   }).catch(error => {
     console.error("Failed to load one or more club models:", error);
   });
 
-    pants.position.set(0,pantsHt*avatarHt,0)
-    scene.add(pants);
+  pants.position.set(0,pantsHt*avatarHt,0)
+  scene.add(pants);
 
-
-    return pants;
+  console.log("retunring avatar")
+  return pants;
 
 }
 
@@ -879,7 +891,7 @@ function createCup(holeRadius = CUP_RADIUS) {
   const cupGeometry = new THREE.CylinderGeometry(wallRadius, wallRadius, cupHeight, segments, 1, true);
   
   const textureLoader = new THREE.TextureLoader();
-  const cupTexture = textureLoader.load('textures/cup_texture.jpg');
+  const cupTexture = textureLoader.load('./textures/cup_texture.jpg');
   cupTexture.wrapS = THREE.RepeatWrapping;
   cupTexture.wrapT = THREE.ClampToEdgeWrapping;
   cupTexture.repeat.set(1, 1); // Stretch horizontally
@@ -941,7 +953,7 @@ class Ball {
   createMesh() {
       
     const textureLoader = new THREE.TextureLoader();
-    const ballTexture = textureLoader.load('textures/wii_ball.jpg');
+    const ballTexture = textureLoader.load('./textures/wii_ball.jpg');
 
     const ballGeometry = new THREE.SphereGeometry(BALL_RADIUS, 12, 12);
     const ballMaterial = new THREE.MeshStandardMaterial({ 
@@ -1391,7 +1403,7 @@ class AimTools {
 
 
 
-const yCamOffset = 13
+const yCamOffset = 13 //13 default 
 const yLookOffset = 5;
 const cameraDistance = 50;
 const TRACKING_DELAY = 80 // # frames it stays on tee cam before tracking
@@ -1574,31 +1586,47 @@ class GameManager {
     ball = new Ball() // ball, flag, cup, avatar
     this.cup = createCup();
     this.flag = createFlag();
-    this.avatar= createAvatar();
+    this.avatar = createAvatar();
+
     // this.teeMarkers = createTeeMarkers() // todo: add tee globes
 
     CAM_MANAGER = new CamManager()
     UI_MANAGER = new UIManager()
+
+    activateWiimote()
   }
   
-  changeClub(name) {
+  async changeClub(name) {
     console.log('switching to '+name)
     currentClub = CLUB_PROFILES[name];
     console.log(currentClub)
     let avatar = this.avatar
 
     // 1. Remove old club if it exists
-    console.log(avatar.children)
     if (avatar.children.includes(clubMesh)) {
+      console.log(avatar.children)
       avatar.remove(clubMesh);
       console.log("removing old club")
     }
-
     // 2. Clone new club mesh
+    console.log("\nAdding club mesh to avatar: ")
+    console.log("\tcurrentClub:")
+    console.log(currentClub)
+    console.log("\tcurrentClub.model:")
+    console.log(currentClub.model)
+    
+    if (!currentClub.model) {
+      console.log("Not all clubs loaded! sleeping...")
+      await new Promise(r => setTimeout(r, 1000));
+    } else {
+      console.log("all clubs loaded, no sleep")
+    }
+    console.log(currentClub.model)
     const newClubMesh = currentClub.model.clone(); // assuming this is already loaded
     newClubMesh.position.set(2.6,4.7,0.9)
-
+    
     // 4. Add to avatar
+    console.log(avatar)
     avatar.add(newClubMesh);
 
     // 5. Track current club mesh
@@ -1674,93 +1702,6 @@ class GameManager {
   
 }
 
-let ogTerrainMesh = false;
-async function makeTerrainMesh(holeName) {
-  // TODO:  IMPLEMENT DYNAMIC FILES BASED ON HOLE NAME
-  console.log("2. Building Terrain Mesh for "+holeName);
-
-  const terrainWidth = OPT_SIZE;
-  const terrainHeight = OPT_SIZE;
-  const terrainSegments = OPT_RES - 1;
-  const vertexCount = OPT_RES * OPT_RES;
-
-  // 1. Load 16-bit heightmap
-  console.log("\t2b. Loading Bumpmap...");
-
-  const res = await fetch('/bump_maps/'+FILE_BUMP);
-  const buffer = await res.arrayBuffer();
-  heightData = new Uint16Array(buffer);
-  console.log("\t\t-- Done Loading Bump!");
-
-  if (heightData.length !== vertexCount) {
-    console.error(`Heightmap size mismatch: got ${heightData.length}, expected ${vertexCount}`);
-    return;
-  }
-
-  // 2. Create geometry
-  const geometry = new THREE.PlaneGeometry(terrainWidth, terrainHeight, terrainSegments, terrainSegments);
-  geometry.rotateX(-Math.PI / 2);
-
-  applyHeightmap(heightData, OPT_RES, OPT_RES); // width and height of the RAW file
-
-  function applyHeightmap(data, width, height) {
-    const vertices = geometry.attributes.position;
-    const size = OPT_SIZE;
-
-    for (let i = 0; i < vertices.count; i++) {
-      const vx = vertices.getX(i);
-      const vz = vertices.getZ(i);
-
-      // Convert world coordinates to heightmap coords
-      const fx = (vx + size / 2) / size * (width - 1);
-      const fz = (vz + size / 2) / size * (height - 1);
-
-      const x0 = Math.floor(fx);
-      const x1 = Math.min(x0 + 1, width - 1);
-      const z0 = Math.floor(fz);
-      const z1 = Math.min(z0 + 1, height - 1);
-
-      const tx = fx - x0;
-      const tz = fz - z0;
-
-      const get = (x, z) => data[z * width + x] / 65535;
-
-      const h00 = get(x0, z0);
-      const h10 = get(x1, z0);
-      const h01 = get(x0, z1);
-      const h11 = get(x1, z1);
-
-      const h0 = h00 * (1 - tx) + h10 * tx;
-      const h1 = h01 * (1 - tx) + h11 * tx;
-      const h = h0 * (1 - tz) + h1 * tz;
-
-      vertices.setY(i, h * OPT_BUMPHEIGHT);
-    }
-
-    vertices.needsUpdate = true;
-    geometry.computeVertexNormals();
-  }
-
-
-
-  console.log("\t2c. Creating Surface Material...");
-  let terrainMaterial;
-  if (1 == 1) {
-    terrainMaterial = new THREE.MeshStandardMaterial({ color: 0x1c5c35 });
-  } else {
-    terrainMaterial = await createSurfaceTexturesAsync()
-  }
-
-  ogTerrainMesh = new THREE.Mesh(geometry, terrainMaterial);
-  scene.add(ogTerrainMesh);
-
-  console.log("4. Terrain Added to Scene");
-
-  // addSurfaceTextures()
-
-  console.log("\n\nDONE WITH TERRAIN MESH\n\n");
-}
-    
 
 const distFromBall = 6.5
 
@@ -1783,29 +1724,13 @@ class HoleManager {
   async loadTerrain() {
     console.log("$$$$$$$$$$$$$$$$$$$$$$\nLOADING TERRAIN\n-------------------------")
 
-    
-  const vertexCount = OPT_RES * OPT_RES;
-
-  // 1. Load 16-bit heightmap
-  console.log("\t2b. Loading Bumpmap...");
-
-  const res = await fetch('/bump_maps/'+FILE_BUMP);
-  const buffer = await res.arrayBuffer();
-  heightData = new Uint16Array(buffer);
-  console.log("\t\t-- Done Loading Bump!");
-
-  if (heightData.length !== vertexCount) {
-    console.error(`Heightmap size mismatch: got ${heightData.length}, expected ${vertexCount}`);
-    return;
-  }
-
     // const bruh = await makeTerrainMesh(this.holeName)
     return new Promise((resolve, reject) => {
         let lastXHR = 0;
         const loader = new GLTFLoader();
             console.log('NEW GLTF LOADER');
 
-        loader.load('/gltf/167k_singleTerrainMesh.glb', 
+        loader.load('./gltf/167k_singleTerrainMesh.glb', 
         (gltf) => {
             let terrain = gltf.scene 
             scene.add(terrain);
@@ -2223,3 +2148,226 @@ document.getElementById('restartGame').addEventListener('click', () => {
 });
 let startDropTime = 0
 
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// WIIMOTE + SOCKET RECEIVER ////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// WIIMOTE + SOCKET RECEIVER ////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// WIIMOTE + SOCKET RECEIVER ////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function activateWiimote() {
+  console.log("\n\n\nACTIVATING WIIMOTE\n\n\n")
+  // WIIMOTE SETUP //
+  const ws = new WebSocket('ws://localhost:8081');
+  const swingPowerBar = document.getElementById('swingPowerBar');
+
+  let arcAngle = 0;
+  let impact = false;
+  let impactActive = false;
+  let impactSpeedNorm = null;
+
+  const xHistorySize = 10;
+  let xSignHistory = new Array(xHistorySize).fill(-1);
+  let currentDir = -1; // -1 = backswing, 1 = forward
+  let lastYawAngle = 0
+
+  const speedHistorySize = 2;
+  let speedHistory = new Array(speedHistorySize).fill(0);
+  let speedAvg = 0; // rolling avg
+
+  function clamp(val, min, max) {
+    return Math.min(Math.max(val, min), max);
+  }
+
+  let yawAngle = 0;
+  let pitchAngle = 0;
+  let rollAngle = 0;
+  let lastTimestamp = null;
+  let deltaTime = 0.016; // default to ~60Hz if first frame
+
+
+  //////////////////////////////////////
+  // ACCESS WEB SOCKET MESSAGES ////////
+  //////////////////////////////////////
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    const accel = data.accel || { x: 0, y: 0, z: 0 };
+    const gyro = data.gyro || { yaw: 0, pitch: 0, roll: 0 };
+    const buttons = data.buttons || {};
+
+  // BUTTONS ////////////////////////
+    if (buttons.B) {
+      arcAngle = Math.PI / 2;
+      impact = false;
+
+      swingPowerBar.style.height = `${0}%`;
+      swingPowerBar.style.background = impact ? "blue" : "gray";
+
+      yawAngle = 0;
+      pitchAngle = 0;
+      rollAngle = 0;
+    }
+
+
+  // GYRO ////////////////////////
+    const now = Date.now();
+    if (lastTimestamp !== null) {
+      deltaTime = (now - lastTimestamp) / 1000; // seconds
+    }
+    lastTimestamp = now;
+
+    let newGyroYaw   = gyro.yaw;
+    let newGyroPitch = gyro.pitch;
+    let newGyroRoll  = gyro.roll;
+    // console.log(newGyroYaw.toFixed(1)+" \t|\t"+newGyroPitch.toFixed(1)+"\t|\t"+newGyroRoll.toFixed(1))
+
+    // ignore tiny values 
+    const minGyroDelta = 5
+    newGyroYaw   = Math.abs(newGyroYaw) > minGyroDelta ? newGyroYaw : 0;
+    newGyroPitch = Math.abs(newGyroPitch) > minGyroDelta ? newGyroPitch : 0;
+    newGyroRoll  = Math.abs(newGyroRoll) > minGyroDelta ? newGyroRoll : 0;
+
+    // Accumulate angles
+    yawAngle += newGyroYaw * deltaTime;
+    pitchAngle += newGyroPitch * deltaTime;
+    rollAngle += newGyroRoll * deltaTime;
+
+    const driftThreshold = 1; // deg/s or rad/s equivalent
+    const correctionFactor = 0.002; // smaller = slower correction
+
+    // Keep angles bounded for stability
+    yawAngle = ((yawAngle + 180) % 360) - 180;
+    pitchAngle = ((pitchAngle + 180) % 360) - 180;
+    rollAngle = ((rollAngle + 180) % 360) - 180;
+    
+
+  //// SWING LOGIC ////////////////////////////////////////
+  //// SWING LOGIC ////////////////////////////////////////
+
+    const scaleUp = 1.33 // maps 0 - .75 to 0-1 because really fast backswing only gets up to 3/4 of 180 deg, will clamp anything higher to 1.0 output
+    let swingBack = (yawAngle * scaleUp) / 180 * Math.PI;
+    swingBack = clamp(swingBack, -Math.PI, Math.PI);
+
+    // CALCULATE SWING DIRECTION 
+    xSignHistory.push(yawAngle > lastYawAngle ? 1 : -1); 
+    if (xSignHistory.length > xHistorySize) xSignHistory.shift();
+    lastYawAngle = yawAngle
+    
+    const sum = xSignHistory.reduce((a, b) => a + b, 0);
+    currentDir = sum >= 0 ? 1 : -1;
+
+    // UPDATE OUTPUT ANGLE (and POWER BAR VISUALS)
+    const smoothing = 0.4;
+    const minDeltaThreshold = 0.06;
+    
+    const targetAngle = Math.PI / 2 - swingBack;
+    const deltaAngle = targetAngle - arcAngle;
+    if (Math.abs(deltaAngle) > minDeltaThreshold) {
+      arcAngle += deltaAngle * smoothing;
+      const normBack = Math.abs(arcAngle - Math.PI/2) / Math.PI
+      // Update power bar
+      const barHtNorm = impact ? impactSpeedNorm : normBack 
+      WIIMOTE_POWER = barHtNorm * currentDir
+      swingPowerBar.style.height = `${Math.abs(barHtNorm) * 100}%`;
+      
+      swingPowerBar.style.background = impact ? "blue" : "gray";
+      if (impactActive) {
+        swingPowerBar.style.background = "cyan";
+      } else {
+        if (barHtNorm > 1 ){
+          swingPowerBar.style.background = "pink";
+        }
+      }
+    }
+
+    // UPDATE CLUB SPEED
+    // remove gravity
+    let xSpeed = Math.abs(accel.x) < 11 ? 0 : accel.x * accel.x
+    let ySpeed = Math.abs(accel.y+10) < 11 ? 0 : accel.y * accel.y
+    let zSpeed = Math.abs(accel.z) < 11 ? 0 : accel.z * accel.z
+
+    const totalSpeed = Math.sqrt(xSpeed + ySpeed + zSpeed);
+    speedHistory.push(totalSpeed || 0); 
+    if (speedHistory.length > speedHistorySize) speedHistory.shift();
+    const spd_sum = speedHistory.reduce((a, b) => a + b, 0);
+    speedAvg = spd_sum / speedHistory.length;
+
+
+    // CHECK FOR IMPACT ///////
+    const impactSpeedThreshold = 5; // Tune this experimentally
+    const forwardSwing = (currentDir === 1); // if you already have direction logic
+
+    // allows for bigger threshold on forward side, but smaller on backswing side
+    // const nearAddress = arcAngle - Math.PI / 2 < 0.3 || (currentDir === 1 && arcAngle - Math.PI / 2 < 1.0);
+    const nearAddress = true;
+    
+    function calcNormSpeed(rawSpeed) {
+      let rawNorm = rawSpeed / maxSpeed
+      let curved = 1.03 / ( 1 + Math.E**(3 - 7*rawNorm))
+      let clamped = clamp(curved, 0, 1)
+      if (rawNorm > 1.2) {
+        clamped = 1.2
+      }
+      return clamped
+    }
+
+    const maxSpeed = 40
+    if (!impact && nearAddress) {
+      // swingPowerBar.style.background = "gold";
+      
+      if (speedAvg > impactSpeedThreshold && forwardSwing) {
+          console.log("\n\nImpact detected!");
+          impact = true
+          impactActive = true
+          impactSpeedNorm = calcNormSpeed(speedAvg);
+          console.log("1st imp sp:  "+ impactSpeedNorm.toFixed(2))
+      }
+    }
+    if (impactActive) {
+      let newImpactSpeed = calcNormSpeed(speedAvg);
+      if (newImpactSpeed > impactSpeedNorm) {
+        impactSpeedNorm = newImpactSpeed;
+        console.log("\tfaster: "+ impactSpeedNorm.toFixed(2))
+      } 
+      else {
+        console.log("\t\tslower: "+ newImpactSpeed.toFixed(2))
+
+        if (newImpactSpeed - impactSpeedNorm < -.05) {
+          impactActive = false;
+          console.log("\ndone impacting!  |  final speed: "+impactSpeedNorm.toFixed(2))
+
+        }
+      }
+    }
+
+    // END SWING LOGIC
+
+  }; // END WS.ONMESSAGE
+
+  ws.onopen = () => {
+    console.log("✅ WebSocket connected");
+  };
+}
+
+///END///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////// WIIMOTE + SOCKET RECEIVER ////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////END/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////END/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////END/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////END/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////END/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////END/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////END/////////////////////////////////////////////////////////////////////////////////
